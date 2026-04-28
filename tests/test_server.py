@@ -23,6 +23,12 @@ def client_tools() -> list[Tool]:
         generate_tool(yf.get_recommendations),
         generate_tool(yf.get_option_expiration_dates),
         generate_tool(yf.get_option_chain),
+        generate_tool(yf.get_calls),
+        generate_tool(yf.get_puts),
+        generate_tool(yf.get_options_multi_expiry),
+        generate_tool(yf.get_options_summary),
+        generate_tool(yf.get_unusual_options_activity),
+        generate_tool(yf.get_options_pnl),
     ]
 
 
@@ -42,6 +48,12 @@ def client_tools() -> list[Tool]:
         "get_recommendations",
         "get_option_expiration_dates",
         "get_option_chain",
+        "get_calls",
+        "get_puts",
+        "get_options_multi_expiry",
+        "get_options_summary",
+        "get_unusual_options_activity",
+        "get_options_pnl",
     ],
 )
 async def test_list_tools(client_tools: list[Tool], tool_name) -> None:

@@ -1,6 +1,6 @@
 import inspect
 from datetime import datetime
-from typing import Any, Union, get_origin
+from typing import Any, Literal, Union, get_args, get_origin
 
 from mcp.types import Tool
 
@@ -36,6 +36,14 @@ def _infer_json_type(annotation: Any) -> str:
 
     origin = get_origin(annotation)
 
+    if origin is Literal:
+        args = get_args(annotation)
+        if args and all(isinstance(a, str) for a in args):
+            return "string"
+        if args and all(isinstance(a, (int, float)) for a in args):
+            return "number"
+        return "string"
+
     if origin is Union:
         args = annotation.__args__
         for arg in args:
@@ -51,6 +59,13 @@ def _infer_json_type(annotation: Any) -> str:
         return "string"
 
     return "string"
+
+
+def _get_literal_values(annotation: Any) -> list | None:
+    """Extract enum values from a Literal type annotation."""
+    if get_origin(annotation) is Literal:
+        return list(get_args(annotation))
+    return None
 
 
 def generate_tool(func: Any) -> Tool:
@@ -70,10 +85,16 @@ def generate_tool(func: Any) -> Tool:
 
     for param_name, param in signature.parameters.items():
         param_type = _infer_json_type(param.annotation)
-        schema["inputSchema"]["properties"][param_name] = {
+        prop: dict[str, Any] = {
             "type": param_type,
             "description": param_descriptions.get(param_name, ""),
         }
+
+        literal_values = _get_literal_values(param.annotation)
+        if literal_values:
+            prop["enum"] = literal_values
+
+        schema["inputSchema"]["properties"][param_name] = prop
 
         if "required" not in schema["inputSchema"]:
             schema["inputSchema"]["required"] = [param_name]
